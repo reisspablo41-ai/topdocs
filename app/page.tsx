@@ -2,6 +2,7 @@
 import { motion } from 'framer-motion';
 import Image from 'next/image';
 import Link from 'next/link';
+import { useState, useEffect, useRef } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { CircularProgress } from '@/components/ui/circular-progress';
@@ -22,193 +23,448 @@ const staggerContainer = {
   },
 };
 
+// Counter component with animation
+function AnimatedCounter({
+  value,
+  label,
+  icon,
+}: {
+  value: number;
+  label: string;
+  icon: React.ReactNode;
+}) {
+  const [count, setCount] = useState(value); // Start with actual value
+  const [hasAnimated, setHasAnimated] = useState(false);
+  const counterRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const currentRef = counterRef.current;
+    if (!currentRef) return;
+
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting && !hasAnimated) {
+          setHasAnimated(true);
+        }
+      },
+      { threshold: 0.5 }
+    );
+
+    observer.observe(currentRef);
+
+    return () => {
+      observer.unobserve(currentRef);
+    };
+  }, [hasAnimated]);
+
+  useEffect(() => {
+    if (!hasAnimated) {
+      return; // Keep showing the actual value until animation starts
+    }
+
+    // Animate from 0 to target value
+    const duration = 2000; // 2 seconds
+    const steps = 60;
+    const increment = value / steps;
+    const stepDuration = duration / steps;
+
+    let timer: NodeJS.Timeout | null = null;
+
+    // Use setTimeout to avoid synchronous setState
+    const timeout = setTimeout(() => {
+      setCount(0); // Start from 0 for animation
+      let current = 0;
+      timer = setInterval(() => {
+        current += increment;
+        if (current >= value) {
+          setCount(value);
+          if (timer) clearInterval(timer);
+        } else {
+          setCount(Math.floor(current));
+        }
+      }, stepDuration);
+    }, 0);
+
+    return () => {
+      clearTimeout(timeout);
+      if (timer) clearInterval(timer);
+    };
+  }, [hasAnimated, value]);
+
+  return (
+    <div ref={counterRef} className="flex flex-col items-center text-center">
+      <div className="mb-4 w-16 h-16 rounded-full bg-white/10 flex items-center justify-center backdrop-blur-sm">
+        {icon}
+      </div>
+      <div className="text-5xl md:text-6xl font-bold text-white mb-2">
+        {count}
+      </div>
+      <div className="text-lg md:text-xl text-white/90">{label}</div>
+    </div>
+  );
+}
+
 export default function Home() {
   return (
-    <main className="space-y-20">
+    <main className="space-y-0">
+      {/* Hero Section - Simplified */}
       <motion.section
         className="relative overflow-hidden min-h-screen flex items-center justify-center w-full"
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
-        transition={{ duration: 0.8 }}
+        transition={{ duration: 0.6 }}
       >
-        <div
-          className="absolute inset-0 bg-cover bg-center"
-          style={{
-            backgroundImage:
-              'url(https://images.pexels.com/photos/29402986/pexels-photo-29402986.jpeg)',
-          }}
-        />
-        <div className="absolute inset-0 bg-black/50 z-10" />
+        {/* Passport Collage Background */}
+        <div className="absolute inset-0">
+          <Image
+            src="https://images.pexels.com/photos/29402986/pexels-photo-29402986.jpeg"
+            alt="International Passports Background"
+            fill
+            className="object-cover"
+            unoptimized
+            priority
+          />
+        </div>
+
+        {/* Dark Overlay */}
+        <div className="absolute inset-0 bg-black/60 z-10" />
+
+        {/* Content */}
         <motion.div
-          className="relative z-20 mx-auto max-w-6xl w-full px-4 text-center"
-          initial={{ opacity: 0, y: 30 }}
+          className="relative z-20 mx-auto max-w-5xl w-full px-4 text-center"
+          initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.8, delay: 0.2 }}
         >
-          <motion.h1
-            className="text-4xl md:text-5xl lg:text-6xl xl:text-7xl font-semibold tracking-tight text-white"
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
+          {/* Subtitle */}
+          <motion.p
+            className="text-sm md:text-base uppercase tracking-widest text-white/90 mb-4"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
             transition={{ duration: 0.6, delay: 0.3 }}
           >
-            Trusted Identity & Permit Services
+            REGISTERED & FAKE DOCUMENTS
+          </motion.p>
+
+          {/* Main Headline */}
+          <motion.h1
+            className="text-4xl md:text-5xl lg:text-6xl xl:text-7xl font-bold text-white mb-8 leading-tight"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8, delay: 0.4 }}
+          >
+            <span className="text-teal-600">Excellent Consulting</span>
+            <br />
+            Services for You
           </motion.h1>
-          <motion.p
-            className="mt-6 text-lg md:text-xl lg:text-2xl text-white/95 max-w-3xl mx-auto"
+
+          {/* CTA Button */}
+          <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, delay: 0.5 }}
           >
-            Fast, secure, and professional guidance for official passports,
-            driver&apos;s licenses, ID cards, and residence permits. Learn how
-            to obtain documents, schedule appointments, and understand
-            requirements.
-          </motion.p>
-          <motion.div
-            className="mt-10 flex flex-wrap justify-center gap-4"
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, delay: 0.7 }}
-          >
             <Link href="/services/passport">
-              <Button size="lg">Get Started</Button>
-            </Link>
-            <Link href="/contact">
               <Button
-                variant="outline"
                 size="lg"
-                className="bg-white/10 border-white/20 text-white hover:bg-white/20"
+                className="bg-blue-600 hover:bg-blue-700 text-white font-bold px-10 py-6 text-lg uppercase tracking-wide shadow-2xl hover:shadow-3xl transition-all"
               >
-                Contact Support
+                Make an Order Now
               </Button>
             </Link>
           </motion.div>
         </motion.div>
       </motion.section>
 
-      <div className="mx-auto max-w-6xl px-4 py-12 space-y-20">
+      {/* Services Section */}
+      <div className="mx-auto max-w-7xl px-4 py-20">
         <motion.section
           initial="initial"
           whileInView="animate"
           viewport={{ once: true, margin: '-100px' }}
           variants={staggerContainer}
         >
-          <motion.h2 variants={fadeInUp} className="text-2xl font-semibold">
-            Services
-          </motion.h2>
+          <motion.div
+            variants={fadeInUp}
+            className="text-center mb-16 space-y-4"
+          >
+            <h2 className="text-4xl md:text-5xl font-bold text-zinc-900">
+              Our Services
+            </h2>
+            <p className="text-xl text-zinc-600 max-w-2xl mx-auto">
+              Professional document services tailored to your needs. Quality,
+              reliability, and excellence in every document we produce.
+            </p>
+          </motion.div>
           <motion.div
             variants={staggerContainer}
-            className="mt-6 grid gap-6 sm:grid-cols-2 lg:grid-cols-4"
+            className="mt-6 grid gap-6 sm:grid-cols-2 lg:grid-cols-3"
           >
-            <motion.div variants={fadeInUp}>
-              <Card>
-                <CardHeader>
-                  <CardTitle>Passports</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <p>
-                    Clear requirements, compliant forms, and timeline guidance
-                    for official issuance. Learn how to obtain passports,
-                    schedule appointments (cómo sacar cita para pasaporte), and
-                    understand all requirements (requisitos para sacar
-                    pasaporte).
-                  </p>
-                  <Link href="/services/passport" className="mt-4 inline-block">
-                    <Button variant="outline" size="sm">
-                      Learn more
+            {/* Passport Service Card */}
+            <motion.div variants={fadeInUp} className="group relative">
+              <Link href="/services/passport">
+                <div className="relative h-[400px] rounded-xl overflow-hidden cursor-pointer">
+                  {/* Background Image */}
+                  <Image
+                    src="https://images.pexels.com/photos/29402986/pexels-photo-29402986.jpeg"
+                    alt="Passports"
+                    fill
+                    className="object-cover transition-transform duration-500 group-hover:scale-110"
+                    unoptimized
+                  />
+                  {/* Icon Overlay */}
+                  <div className="absolute top-6 left-6 z-10">
+                    <div className="w-16 h-16 bg-white/90 rounded-full flex items-center justify-center backdrop-blur-sm">
+                      <svg
+                        className="w-8 h-8 text-teal-600"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 002 2h2.945M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                        />
+                      </svg>
+                    </div>
+                  </div>
+                  {/* Content Overlay - Always Visible */}
+                  <div className="absolute bottom-0 left-0 right-0 p-6 bg-gradient-to-t from-black/80 to-transparent">
+                    <h3 className="text-2xl font-semibold text-white mb-2">
+                      Passports
+                    </h3>
+                    <p className="text-white/90 text-sm">
+                      Quality database documents passport. We are the best
+                      producer of quality documents.
+                    </p>
+                  </div>
+                  {/* Hover Overlay - Teal600 with additional text */}
+                  <div className="absolute inset-0 bg-teal-600/90 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex flex-col justify-center items-center p-8 text-white">
+                    <h3 className="text-3xl font-semibold mb-4 text-center">
+                      Passports
+                    </h3>
+                    <p className="text-lg mb-4 text-center">
+                      Quality database documents passport. We are the best
+                      producer of quality documents.
+                    </p>
+                    <p className="text-base text-white/90 text-center mb-6">
+                      Clear requirements, compliant forms, and timeline guidance
+                      for official issuance. Learn how to obtain passports,
+                      schedule appointments, and understand all requirements.
+                    </p>
+                    <Button
+                      variant="outline"
+                      size="lg"
+                      className="!bg-white !text-teal-600 hover:!bg-zinc-100 border-white"
+                    >
+                      Learn More
                     </Button>
-                  </Link>
-                </CardContent>
-              </Card>
+                  </div>
+                </div>
+              </Link>
             </motion.div>
-            <motion.div variants={fadeInUp}>
-              <Card>
-                <CardHeader>
-                  <CardTitle>Driver&apos;s Licenses</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <p>
-                    Learn about <strong>UK driving licence</strong>,{' '}
-                    <strong>apply for driving licence UK</strong>,{' '}
-                    <strong>provisional driving licence UK</strong>,{' '}
-                    <strong>replacement driving licence</strong>,{' '}
-                    <strong>where to buy a legal UK Driving License</strong>,{' '}
-                    <strong>European Driving License</strong>,{' '}
-                    <strong>EU Driving License</strong>,{' '}
-                    <strong>International Driving Permit</strong>,{' '}
-                    <strong>license test</strong>,{' '}
-                    <strong>drivers license renewal</strong>, and{' '}
-                    <strong>renew drivers license UK</strong>. Eligibility,
-                    testing schedules, and renewal support with local
-                    authorities.
+
+            {/* Driver's License Service Card */}
+            <motion.div variants={fadeInUp} className="group relative">
+              <Link href="/services/drivers-license">
+                <div className="relative h-[400px] rounded-xl overflow-hidden cursor-pointer">
+                  {/* Background Image */}
+                  <Image
+                    src="https://images.pexels.com/photos/45113/pexels-photo-45113.jpeg"
+                    alt="Driver's Licenses"
+                    fill
+                    className="object-cover transition-transform duration-500 group-hover:scale-110"
+                    unoptimized
+                  />
+                  {/* Icon Overlay */}
+                  <div className="absolute top-6 left-6 z-10">
+                    <div className="w-16 h-16 bg-white/90 rounded-full flex items-center justify-center backdrop-blur-sm">
+                      <svg
+                        className="w-8 h-8 text-teal-600"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
+                        />
+                      </svg>
+                    </div>
+                  </div>
+                  {/* Content Overlay - Always Visible */}
+                  <div className="absolute bottom-0 left-0 right-0 p-6 bg-gradient-to-t from-black/80 to-transparent">
+                    <h3 className="text-2xl font-semibold text-white mb-2">
+                      Driver&apos;s Licenses
+                    </h3>
+                    <p className="text-white/90 text-sm">
+                      Professional driver&apos;s license services. Get guidance
+                      on obtaining, renewing, or replacing your license.
+                    </p>
+                  </div>
+                  {/* Hover Overlay - Teal600 with additional text */}
+                  <div className="absolute inset-0 bg-teal-600/90 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex flex-col justify-center items-center p-8 text-white">
+                    <h3 className="text-3xl font-semibold mb-4 text-center">
+                      Driver&apos;s Licenses
+                    </h3>
+                    <p className="text-lg mb-4 text-center">
+                      Professional driver&apos;s license services. Get guidance
+                      on obtaining, renewing, or replacing your license.
+                    </p>
+                    <p className="text-base text-white/90 text-center mb-6">
+                      Eligibility requirements, testing schedules, and renewal
+                      support with local authorities. We provide comprehensive
+                      assistance for all your driving license needs.
+                    </p>
+                    <Button
+                      variant="outline"
+                      size="lg"
+                      className="!bg-white !text-teal-600 hover:!bg-zinc-100 border-white"
+                    >
+                      Learn More
+                    </Button>
+                  </div>
+                </div>
+              </Link>
+            </motion.div>
+
+            {/* ID Card Service Card */}
+            <motion.div variants={fadeInUp} className="group relative">
+              <Link href="/services/id-card">
+                <div className="relative h-[400px] rounded-xl overflow-hidden cursor-pointer">
+                  {/* Background Image */}
+                  <Image
+                    src="https://images.pexels.com/photos/842961/pexels-photo-842961.jpeg"
+                    alt="ID Cards"
+                    fill
+                    className="object-cover transition-transform duration-500 group-hover:scale-110"
+                    unoptimized
+                  />
+                  {/* Icon Overlay */}
+                  <div className="absolute top-6 left-6 z-10">
+                    <div className="w-16 h-16 bg-white/90 rounded-full flex items-center justify-center backdrop-blur-sm">
+                      <svg
+                        className="w-8 h-8 text-teal-600"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M10 6H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V8a2 2 0 00-2-2h-5m-4 0V5a2 2 0 114 0v1m-4 0a2 2 0 104 0m-5 8a2 2 0 100-4 2 2 0 000 4zm0 0c1.306 0 2.417.835 2.83 2M9 14a3.001 3.001 0 00-2.83 2M15 11h3m-3 4h2"
+                        />
+                      </svg>
+                    </div>
+                  </div>
+                  {/* Content Overlay - Always Visible */}
+                  <div className="absolute bottom-0 left-0 right-0 p-6 bg-gradient-to-t from-black/80 to-transparent">
+                    <h3 className="text-2xl font-semibold text-white mb-2">
+                      ID Cards
+                    </h3>
+                    <p className="text-white/90 text-sm">
+                      Identity verification and documentation services. Get help
+                      with national and state ID card applications.
+                    </p>
+                  </div>
+                  {/* Hover Overlay - Teal600 with additional text */}
+                  <div className="absolute inset-0 bg-teal-600/90 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex flex-col justify-center items-center p-8 text-white">
+                    <h3 className="text-3xl font-semibold mb-4 text-center">
+                      ID Cards
+                    </h3>
+                    <p className="text-lg mb-4 text-center">
+                      Identity verification and documentation services. Get help
+                      with national and state ID card applications.
+                    </p>
+                    <p className="text-base text-white/90 text-center mb-6">
+                      Identity verification steps, documentation checklists, and
+                      replacement pathways. We assist with all your ID card
+                      needs from application to renewal.
+                    </p>
+                    <Button
+                      variant="outline"
+                      size="lg"
+                      className="!bg-white !text-teal-600 hover:!bg-zinc-100 border-white"
+                    >
+                      Learn More
+                    </Button>
+                  </div>
+                </div>
+              </Link>
+            </motion.div>
+          </motion.div>
+          {/* Residence Permit Card - Below the main 3 */}
+          <motion.div variants={fadeInUp} className="mt-6">
+            <Link href="/services/residence-permit">
+              <div className="relative h-[300px] rounded-xl overflow-hidden cursor-pointer group">
+                {/* Background Image */}
+                <Image
+                  src="https://images.pexels.com/photos/4922080/pexels-photo-4922080.jpeg"
+                  alt="Residence Permits"
+                  fill
+                  className="object-cover transition-transform duration-500 group-hover:scale-110"
+                  unoptimized
+                />
+                {/* Icon Overlay */}
+                <div className="absolute top-6 left-6 z-10">
+                  <div className="w-16 h-16 bg-white/90 rounded-full flex items-center justify-center backdrop-blur-sm">
+                    <svg
+                      className="w-8 h-8 text-teal-600"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"
+                      />
+                    </svg>
+                  </div>
+                </div>
+                {/* Content Overlay - Always Visible */}
+                <div className="absolute bottom-0 left-0 right-0 p-6 bg-gradient-to-t from-black/80 to-transparent">
+                  <h3 className="text-2xl font-semibold text-white mb-2">
+                    Residence Permits
+                  </h3>
+                  <p className="text-white/90 text-sm">
+                    Residency categories, supporting evidence, and processing
+                    milestones. Guidance for temporary, permanent, study, and
+                    work-related permits.
                   </p>
-                  <Link
-                    href="/services/drivers-license"
-                    className="mt-4 inline-block"
+                </div>
+                {/* Hover Overlay - Teal600 with additional text */}
+                <div className="absolute inset-0 bg-teal-600/90 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex flex-col justify-center items-center p-8 text-white">
+                  <h3 className="text-3xl font-semibold mb-4 text-center">
+                    Residence Permits
+                  </h3>
+                  <p className="text-lg mb-4 text-center">
+                    Residency categories, supporting evidence, and processing
+                    milestones. Guidance for temporary, permanent, study, and
+                    work-related permits.
+                  </p>
+                  <p className="text-base text-white/90 text-center mb-6">
+                    We provide comprehensive support for residence permits
+                    across multiple countries including UK, EU, and other
+                    international destinations. Get expert guidance on all
+                    permit types.
+                  </p>
+                  <Button
+                    variant="outline"
+                    size="lg"
+                    className="bg-white text-teal-600 hover:bg-zinc-100 border-white"
                   >
-                    <Button variant="outline" size="sm">
-                      Learn more
-                    </Button>
-                  </Link>
-                </CardContent>
-              </Card>
-            </motion.div>
-            <motion.div variants={fadeInUp}>
-              <Card>
-                <CardHeader>
-                  <CardTitle>ID Cards</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <p>
-                    Learn about <strong>ID card</strong>,{' '}
-                    <strong>identity card</strong>, <strong>id card UK</strong>,{' '}
-                    <strong>identity card UK</strong>,{' '}
-                    <strong>identity document</strong>, and{' '}
-                    <strong>card application</strong>. Identity verification
-                    steps, documentation checklists, and replacement pathways.
-                  </p>
-                  <Link href="/services/id-card" className="mt-4 inline-block">
-                    <Button variant="outline" size="sm">
-                      Learn more
-                    </Button>
-                  </Link>
-                </CardContent>
-              </Card>
-            </motion.div>
-            <motion.div variants={fadeInUp}>
-              <Card>
-                <CardHeader>
-                  <CardTitle>Residence Permits</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <p>
-                    Learn about <strong>residence permit</strong>,{' '}
-                    <strong>UK residence permit</strong>,{' '}
-                    <strong>EU residence permit</strong>,{' '}
-                    <strong>Greece residence permit</strong>,{' '}
-                    <strong>Portugal residence permit</strong>,{' '}
-                    <strong>Spain residence permit</strong>,{' '}
-                    <strong>Germany residence permit</strong>,{' '}
-                    <strong>France residence permit</strong>,{' '}
-                    <strong>Italy residence permit</strong>,{' '}
-                    <strong>Cyprus residence permit</strong>,{' '}
-                    <strong>Estonia residence permit</strong>,{' '}
-                    <strong>Canada residence permit</strong>,{' '}
-                    <strong>USA residence permit</strong>, and{' '}
-                    <strong>biometric residence permit</strong>. Residency
-                    categories, supporting evidence, and processing milestones.
-                  </p>
-                  <Link
-                    href="/services/residence-permit"
-                    className="mt-4 inline-block"
-                  >
-                    <Button variant="outline" size="sm">
-                      Learn more
-                    </Button>
-                  </Link>
-                </CardContent>
-              </Card>
-            </motion.div>
+                    Learn More
+                  </Button>
+                </div>
+              </div>
+            </Link>
           </motion.div>
           <motion.div
             variants={staggerContainer}
@@ -262,54 +518,84 @@ export default function Home() {
           whileInView="animate"
           viewport={{ once: true, margin: '-100px' }}
           variants={staggerContainer}
-          className="grid gap-8 lg:grid-cols-2 items-center"
+          className="py-20 bg-gradient-to-b from-white to-zinc-50"
         >
-          <motion.div variants={fadeInUp} className="space-y-4 md:space-y-6">
-            <h2 className="text-2xl sm:text-3xl md:text-4xl font-semibold text-zinc-900">
-              OUR SERVICE
-            </h2>
-            <h3 className="text-xl sm:text-2xl md:text-3xl font-semibold text-zinc-900">
-              DO YOU NEED ANY DOCUMENT?
-            </h3>
-            <p className="text-lg text-zinc-800">
-              We&apos;re in this business since 1995 and provide the best
-              services
-            </p>
-            <div className="space-y-4">
-              <div className="flex items-center gap-3">
-                <div className="w-2 h-2 rounded-full bg-teal-600"></div>
-                <p className="text-zinc-800 font-medium">Traveler Documents</p>
-              </div>
-              <div className="flex items-center gap-3">
-                <div className="w-2 h-2 rounded-full bg-teal-600"></div>
-                <p className="text-zinc-800 font-medium">
-                  Travel Authorization
+          <div className="mx-auto max-w-7xl px-4">
+            <div className="grid gap-12 lg:grid-cols-2 items-center">
+              <motion.div variants={fadeInUp} className="space-y-6">
+                <div className="space-y-2">
+                  <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold text-zinc-900">
+                    Our Service
+                  </h2>
+                  <h3 className="text-2xl sm:text-3xl md:text-4xl font-semibold text-teal-600">
+                    DO YOU NEED ANY DOCUMENT?
+                  </h3>
+                </div>
+                <p className="text-xl text-zinc-700 leading-relaxed">
+                  We&apos;re in this business since{' '}
+                  <span className="font-semibold text-teal-600">1995</span> and
+                  provide the best services. With over three decades of
+                  experience, we&apos;ve built a reputation for excellence,
+                  reliability, and professionalism in document services.
                 </p>
-              </div>
-              <div className="flex items-center gap-3">
-                <div className="w-2 h-2 rounded-full bg-teal-600"></div>
-                <p className="text-zinc-800 font-medium">SSD solutions</p>
-              </div>
+                <div className="space-y-4 pt-4">
+                  <motion.div
+                    className="flex items-center gap-4 p-4 bg-white rounded-lg shadow-sm hover:shadow-md transition-shadow"
+                    whileHover={{ x: 5 }}
+                  >
+                    <div className="w-3 h-3 rounded-full bg-teal-600 flex-shrink-0"></div>
+                    <p className="text-zinc-800 font-medium text-lg">
+                      Traveler Documents
+                    </p>
+                  </motion.div>
+                  <motion.div
+                    className="flex items-center gap-4 p-4 bg-white rounded-lg shadow-sm hover:shadow-md transition-shadow"
+                    whileHover={{ x: 5 }}
+                  >
+                    <div className="w-3 h-3 rounded-full bg-teal-600 flex-shrink-0"></div>
+                    <p className="text-zinc-800 font-medium text-lg">
+                      Travel Authorization
+                    </p>
+                  </motion.div>
+                  <motion.div
+                    className="flex items-center gap-4 p-4 bg-white rounded-lg shadow-sm hover:shadow-md transition-shadow"
+                    whileHover={{ x: 5 }}
+                  >
+                    <div className="w-3 h-3 rounded-full bg-teal-600 flex-shrink-0"></div>
+                    <p className="text-zinc-800 font-medium text-lg">
+                      SSD Solutions
+                    </p>
+                  </motion.div>
+                </div>
+                <p className="text-base text-zinc-600 leading-relaxed pt-4">
+                  We have extensive experience in creating American, European,
+                  Australian, UK, and Asian passports. Our professional document
+                  services are available worldwide, ensuring quality and
+                  authenticity in every document we produce.
+                </p>
+                <Link href="/about">
+                  <Button className="mt-6 bg-teal-600 hover:bg-teal-700 text-white">
+                    More About Us
+                  </Button>
+                </Link>
+              </motion.div>
+              <motion.div
+                variants={fadeInUp}
+                className="relative overflow-hidden rounded-2xl shadow-2xl"
+              >
+                <div className="aspect-4/3 relative">
+                  <Image
+                    src="https://images.pexels.com/photos/4922080/pexels-photo-4922080.jpeg"
+                    alt="Professional document services"
+                    fill
+                    className="object-cover rounded-2xl"
+                    unoptimized
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent"></div>
+                </div>
+              </motion.div>
             </div>
-            <p className="text-base text-zinc-700 leading-relaxed">
-              We have experience in making American, European, Australian, UK,
-              Asian passport. Echter deutscher Führerschein, Reisepass zum
-              Verkauf are also available.
-            </p>
-          </motion.div>
-          <motion.div
-            variants={fadeInUp}
-            className="relative overflow-hidden rounded-xl aspect-4/3"
-          >
-            <Image
-              src="https://images.pexels.com/photos/4922080/pexels-photo-4922080.jpeg"
-              alt="Person holding a passport"
-              width={800}
-              height={600}
-              className="w-full h-full object-cover rounded-xl"
-              unoptimized
-            />
-          </motion.div>
+          </div>
         </motion.section>
       </div>
 
@@ -319,86 +605,204 @@ export default function Home() {
         whileInView="animate"
         viewport={{ once: true, margin: '-100px' }}
         variants={fadeInUp}
-        className="w-full bg-teal-600 text-white py-12 md:py-16 lg:py-20 px-4 md:px-6"
+        className="w-full bg-gradient-to-br from-teal-600 via-teal-700 to-teal-800 text-white py-16 md:py-24 px-4 md:px-6 relative overflow-hidden"
       >
-        <div className="mx-auto max-w-6xl">
-          <motion.h2
-            variants={fadeInUp}
-            className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl xl:text-6xl font-semibold text-center max-w-4xl mx-auto leading-tight mb-8"
-          >
-            Our Mission is to Serve you and bring out the right solution at
-            every time
-          </motion.h2>
-          <motion.div variants={fadeInUp} className="flex justify-center">
-            <Link href="/contact">
-              <Button
-                size="lg"
-                className="bg-white text-zinc-900 hover:bg-zinc-100 font-semibold"
-              >
-                Contact Us
-              </Button>
-            </Link>
+        {/* Decorative Elements */}
+        <div className="absolute inset-0 opacity-10">
+          <div className="absolute top-0 left-0 w-96 h-96 bg-white rounded-full blur-3xl"></div>
+          <div className="absolute bottom-0 right-0 w-96 h-96 bg-white rounded-full blur-3xl"></div>
+        </div>
+
+        <div className="mx-auto max-w-6xl relative z-10">
+          <motion.div variants={fadeInUp} className="text-center space-y-6">
+            <h2 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold max-w-4xl mx-auto leading-tight">
+              Our Mission is to Serve you and bring out the right solution at
+              every time
+            </h2>
+            <p className="text-lg md:text-xl text-white/90 max-w-2xl mx-auto">
+              We are committed to providing exceptional service, ensuring every
+              client receives personalized attention and the highest quality
+              solutions for their document needs.
+            </p>
+            <motion.div
+              variants={fadeInUp}
+              className="flex justify-center pt-4"
+            >
+              <Link href="/contact">
+                <Button
+                  size="lg"
+                  variant="outline"
+                  className="!bg-white !text-teal-700 hover:!bg-zinc-100 font-semibold px-8 py-6 text-lg border-white"
+                >
+                  Contact Us
+                </Button>
+              </Link>
+            </motion.div>
           </motion.div>
         </div>
       </motion.section>
 
-      <div className="mx-auto max-w-6xl px-4 py-12 space-y-20">
+      {/* Our Long Term Service Section */}
+      <motion.section
+        initial="initial"
+        whileInView="animate"
+        viewport={{ once: true, margin: '-100px' }}
+        variants={staggerContainer}
+        className="w-full bg-white py-20 md:py-28 px-4"
+      >
+        <div className="mx-auto max-w-7xl">
+          <div className="grid lg:grid-cols-2 gap-12 items-center">
+            <motion.div variants={fadeInUp} className="space-y-6">
+              <div className="space-y-2">
+                <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold text-zinc-900">
+                  Our Long Term Service
+                </h2>
+                <h3 className="text-2xl sm:text-3xl md:text-4xl font-semibold text-teal-600">
+                  Building Experience & Give High Success Rates
+                </h3>
+              </div>
+              <p className="text-lg md:text-xl text-zinc-700 leading-relaxed">
+                Our prompt delivery services always make sure that your document
+                will reach to your doorstep in the least time. Serving you in
+                the best possible way is our top most priority.
+              </p>
+              <p className="text-base text-zinc-600 leading-relaxed">
+                With decades of experience, we&apos;ve refined our processes to
+                deliver exceptional results. Every document is handled with
+                precision, care, and attention to detail, ensuring you receive
+                exactly what you need, when you need it.
+              </p>
+              <div className="pt-4">
+                <Link href="/how-to-order">
+                  <Button className="bg-teal-600 hover:bg-teal-700 text-white">
+                    Learn More About Our Process
+                  </Button>
+                </Link>
+              </div>
+            </motion.div>
+            <motion.div
+              variants={fadeInUp}
+              className="relative overflow-hidden rounded-2xl shadow-2xl"
+            >
+              <div className="aspect-4/3 relative">
+                <Image
+                  src="https://images.pexels.com/photos/45113/pexels-photo-45113.jpeg"
+                  alt="Professional document services"
+                  fill
+                  className="object-cover rounded-2xl"
+                  unoptimized
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/10 to-transparent"></div>
+              </div>
+            </motion.div>
+          </div>
+        </div>
+      </motion.section>
+
+      <div className="mx-auto max-w-7xl px-4 py-12 space-y-20">
         {/* Statistics Section with Counter Animation */}
         <motion.section
           initial="initial"
           whileInView="animate"
           viewport={{ once: true, margin: '-100px' }}
           variants={staggerContainer}
-          className="grid gap-8 lg:grid-cols-2 items-center"
+          className="grid gap-12 lg:grid-cols-3 items-start"
         >
-          <motion.div variants={fadeInUp} className="space-y-8">
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 md:gap-8">
-              <CircularProgress
-                value={315}
-                max={1000}
-                suffix="+"
-                label="Completed Cases"
-                size={120}
-              />
-              <CircularProgress
-                value={966}
-                max={1000}
-                suffix="+"
-                label="Satisfied Customers"
-                size={120}
-              />
-              <CircularProgress
-                value={868}
-                max={1000}
-                suffix="+"
-                label="Expert Consultants"
-                size={120}
+          {/* Left Column - Large Image */}
+          <motion.div variants={fadeInUp} className="lg:col-span-1 space-y-6">
+            <div className="relative overflow-hidden rounded-xl aspect-4/3">
+              <Image
+                src="https://images.pexels.com/photos/29402986/pexels-photo-29402986.jpeg"
+                alt="British passport"
+                width={800}
+                height={600}
+                className="w-full h-full object-cover rounded-xl"
+                unoptimized
               />
             </div>
-            <div className="pt-4">
-              <p className="text-xl md:text-2xl font-semibold text-zinc-900 mb-4">
-                We&apos;re trusted by more than 10,000 clients
-              </p>
-              <p className="text-base text-zinc-700 leading-relaxed">
-                Building experience and giving high success rates is our
-                commitment. Our track record speaks for itself—we deliver
-                results that exceed expectations and build long-term trust with
-                our clients.
-              </p>
+            {/* Two Circular Progress Indicators Below Image */}
+            <div className="grid grid-cols-2 gap-6">
+              <div className="flex flex-col items-center">
+                <CircularProgress
+                  value={90}
+                  max={100}
+                  suffix="%"
+                  label="Affordable Cost"
+                  size={140}
+                />
+              </div>
+              <div className="flex flex-col items-center">
+                <CircularProgress
+                  value={99}
+                  max={100}
+                  suffix="%"
+                  label="Quality of Work"
+                  size={140}
+                />
+              </div>
             </div>
           </motion.div>
-          <motion.div
-            variants={fadeInUp}
-            className="relative overflow-hidden rounded-xl aspect-4/3"
-          >
-            <Image
-              src="https://images.pexels.com/photos/45113/pexels-photo-45113.jpeg"
-              alt="Professional document services"
-              width={800}
-              height={600}
-              className="w-full h-full object-cover rounded-xl"
-              unoptimized
-            />
+
+          {/* Right Column - Three Expandable Sections */}
+          <motion.div variants={fadeInUp} className="lg:col-span-2 space-y-6">
+            <div className="space-y-6">
+              {/* Great Team Section */}
+              <motion.div
+                initial="initial"
+                whileInView="animate"
+                viewport={{ once: true }}
+                variants={fadeInUp}
+                className="border border-zinc-200 rounded-xl p-6 hover:shadow-lg transition-shadow"
+              >
+                <h3 className="text-2xl font-semibold text-zinc-900 mb-3">
+                  Great Team.
+                </h3>
+                <p className="text-zinc-700 leading-relaxed">
+                  Our experienced team of professionals brings decades of
+                  expertise to every project. We&apos;re committed to delivering
+                  exceptional service and building long-term trust with our
+                  clients through dedication and excellence.
+                </p>
+              </motion.div>
+
+              {/* Better Security Section */}
+              <motion.div
+                initial="initial"
+                whileInView="animate"
+                viewport={{ once: true }}
+                variants={fadeInUp}
+                className="border border-zinc-200 rounded-xl p-6 hover:shadow-lg transition-shadow"
+              >
+                <h3 className="text-2xl font-semibold text-zinc-900 mb-3">
+                  Better Security.
+                </h3>
+                <p className="text-zinc-700 leading-relaxed">
+                  Your privacy and security are our top priorities. We use
+                  industry-standard encryption and follow strict data protection
+                  protocols to ensure all your information remains confidential
+                  and secure throughout the entire process.
+                </p>
+              </motion.div>
+
+              {/* Improved Client Service Section */}
+              <motion.div
+                initial="initial"
+                whileInView="animate"
+                viewport={{ once: true }}
+                variants={fadeInUp}
+                className="border border-zinc-200 rounded-xl p-6 hover:shadow-lg transition-shadow"
+              >
+                <h3 className="text-2xl font-semibold text-zinc-900 mb-3">
+                  Improved Client Service.
+                </h3>
+                <p className="text-zinc-700 leading-relaxed">
+                  We&apos;re available 24/7 to provide prompt, professional
+                  support. Our responsive team ensures you receive timely
+                  updates, clear communication, and personalized assistance
+                  tailored to your specific needs.
+                </p>
+              </motion.div>
+            </div>
           </motion.div>
         </motion.section>
       </div>
@@ -409,14 +813,24 @@ export default function Home() {
         whileInView="animate"
         viewport={{ once: true, margin: '-100px' }}
         variants={staggerContainer}
-        className="w-full bg-teal-600 text-white py-12 md:py-16 px-4 md:px-6"
+        className="w-full bg-gradient-to-r from-teal-600 via-teal-700 to-teal-600 text-white py-16 md:py-20 px-4 md:px-6 relative overflow-hidden"
       >
-        <div className="mx-auto max-w-6xl">
-          <div className="grid gap-6 md:grid-cols-2 items-center">
-            <motion.div variants={fadeInUp}>
-              <h2 className="text-2xl sm:text-3xl md:text-4xl font-semibold text-white">
+        {/* Decorative Pattern */}
+        <div className="absolute inset-0 opacity-10">
+          <div className="absolute top-0 right-0 w-96 h-96 bg-white rounded-full blur-3xl"></div>
+          <div className="absolute bottom-0 left-0 w-96 h-96 bg-white rounded-full blur-3xl"></div>
+        </div>
+
+        <div className="mx-auto max-w-6xl relative z-10">
+          <div className="grid gap-8 md:grid-cols-2 items-center">
+            <motion.div variants={fadeInUp} className="space-y-4">
+              <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold text-white leading-tight">
                 We&apos;re Delivering the Best Document & Business Services
               </h2>
+              <p className="text-lg text-white/90">
+                Experience professional, reliable, and secure document services
+                that exceed expectations.
+              </p>
             </motion.div>
             <motion.div
               variants={fadeInUp}
@@ -425,9 +839,10 @@ export default function Home() {
               <Link href="/contact">
                 <Button
                   size="lg"
-                  className="w-full md:w-auto bg-white text-zinc-900 hover:bg-zinc-100 font-semibold"
+                  variant="outline"
+                  className="w-full md:w-auto !bg-white !text-teal-700 hover:!bg-zinc-100 font-semibold px-8 py-6 text-lg shadow-lg hover:shadow-xl transition-shadow border-white"
                 >
-                  Book Consultation
+                  Free Consultation
                 </Button>
               </Link>
             </motion.div>
@@ -568,10 +983,17 @@ export default function Home() {
             </p>
             <div className="mt-6 flex justify-center gap-4">
               <Link href="/services/passport">
-                <Button>Start Now</Button>
+                <Button className="bg-teal-600 text-white hover:bg-teal-700">
+                  Start Now
+                </Button>
               </Link>
               <Link href="/contact">
-                <Button variant="outline">Talk to us</Button>
+                <Button
+                  variant="outline"
+                  className="text-zinc-900 border-zinc-300 hover:bg-zinc-50"
+                >
+                  Talk to us
+                </Button>
               </Link>
             </div>
           </div>
@@ -703,10 +1125,7 @@ export default function Home() {
                   We outline eligibility, required supporting documents, and
                   common timelines for passport applications. Expect guidance on
                   proof of identity, citizenship documentation, photos, fees,
-                  and renewal procedures. Learn how to obtain passports (obtener
-                  un pasaporte), schedule appointments (cómo sacar cita para
-                  pasaporte), and understand requirements (requisitos para sacar
-                  pasaporte).
+                  and renewal procedures.
                 </p>
                 <p className="mt-3">
                   We also highlight regional differences, appointment
@@ -721,30 +1140,15 @@ export default function Home() {
               </CardHeader>
               <CardContent>
                 <p>
-                  Learn about <strong>driving licence</strong>,{' '}
-                  <strong>UK driving licence</strong>,{' '}
-                  <strong>DVLA driving licence</strong>,{' '}
-                  <strong>driving licence apply online</strong>,{' '}
-                  <strong>UK driving theory test</strong>,{' '}
-                  <strong>practical driving test</strong>,{' '}
-                  <strong>driving test online</strong>,{' '}
-                  <strong>license test</strong>,{' '}
-                  <strong>drivers license renewal</strong>,{' '}
-                  <strong>renew drivers license UK</strong>,{' '}
-                  <strong>professional driver license</strong>,{' '}
-                  <strong>CPC licence</strong>,{' '}
-                  <strong>motorcycle license</strong>, and{' '}
-                  <strong>lost driving licence</strong> replacement. We provide
-                  guidance on identity verification, residency requirements, and
-                  compliant documentation to avoid delays.
+                  We provide guidance on identity verification, residency
+                  requirements, and compliant documentation to avoid delays.
+                  Support for theory tests, practical tests, renewals, and
+                  replacements.
                 </p>
                 <p className="mt-3">
-                  We summarize typical processing times for{' '}
-                  <strong>driving licence online</strong> applications,{' '}
-                  <strong>DVLA online</strong> services,{' '}
-                  <strong>driving licence process</strong>, and how to track
-                  your status through <strong>DVLA website</strong> and local
-                  authority portals.
+                  We summarize typical processing times for online applications
+                  and how to track your status through official portals and
+                  local authority websites.
                 </p>
               </CardContent>
             </Card>
@@ -841,6 +1245,115 @@ export default function Home() {
           <TestimonialsSlider />
         </section>
 
+        {/* Statistics Counters Section */}
+        <motion.section
+          initial="initial"
+          whileInView="animate"
+          viewport={{ once: true, margin: '-100px' }}
+          variants={staggerContainer}
+          className="w-full bg-teal-600 py-16 md:py-20 px-4 relative overflow-hidden"
+        >
+          {/* Background Image */}
+          <div className="absolute inset-0 opacity-20">
+            <Image
+              src="https://images.pexels.com/photos/29402986/pexels-photo-29402986.jpeg"
+              alt="Background"
+              fill
+              className="object-cover"
+              unoptimized
+            />
+          </div>
+
+          <div className="mx-auto max-w-7xl relative z-10">
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-8 items-center">
+              {/* First Counter - Completed Cases */}
+              <motion.div variants={fadeInUp}>
+                <AnimatedCounter
+                  value={315}
+                  label="Completed Cases"
+                  icon={
+                    <svg
+                      className="w-8 h-8 text-white"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+                      />
+                    </svg>
+                  }
+                />
+              </motion.div>
+
+              {/* Second Counter - Satisfied Customers */}
+              <motion.div variants={fadeInUp}>
+                <AnimatedCounter
+                  value={966}
+                  label="Satisfied Customers"
+                  icon={
+                    <svg
+                      className="w-8 h-8 text-white"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+                      />
+                    </svg>
+                  }
+                />
+              </motion.div>
+
+              {/* Third Counter - Expert Consultant */}
+              <motion.div variants={fadeInUp}>
+                <AnimatedCounter
+                  value={868}
+                  label="Expert Consultant"
+                  icon={
+                    <svg
+                      className="w-8 h-8 text-white"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+                      />
+                    </svg>
+                  }
+                />
+              </motion.div>
+
+              {/* Play Button Icon */}
+              <motion.div
+                variants={fadeInUp}
+                className="flex justify-center md:justify-end"
+              >
+                <div className="w-20 h-20 md:w-24 md:h-24 rounded-full bg-sky-400 hover:bg-sky-500 flex items-center justify-center cursor-pointer transition-colors shadow-lg">
+                  <svg
+                    className="w-10 h-10 md:w-12 md:h-12 text-white ml-1"
+                    fill="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path d="M8 5v14l11-7z" />
+                  </svg>
+                </div>
+              </motion.div>
+            </div>
+          </div>
+        </motion.section>
+
         {/* News & Articles Section */}
         <motion.section
           initial="initial"
@@ -876,7 +1389,12 @@ export default function Home() {
                 </ul>
                 <div className="mt-4">
                   <Link href="/contact">
-                    <Button variant="outline">Contact us</Button>
+                    <Button
+                      variant="outline"
+                      className="text-zinc-900 border-zinc-300 hover:bg-zinc-50"
+                    >
+                      Contact us
+                    </Button>
                   </Link>
                 </div>
               </CardContent>
@@ -942,6 +1460,83 @@ export default function Home() {
             </Card>
           </div>
         </section>
+
+        {/* Keywords Section */}
+        <motion.section
+          initial="initial"
+          whileInView="animate"
+          viewport={{ once: true, margin: '-100px' }}
+          variants={staggerContainer}
+          className="border-t border-zinc-200 pt-12"
+        >
+          <motion.h2
+            variants={fadeInUp}
+            className="text-2xl font-semibold mb-6 text-center"
+          >
+            Popular Search Terms
+          </motion.h2>
+          <motion.div
+            variants={staggerContainer}
+            className="grid gap-8 md:grid-cols-2 lg:grid-cols-4"
+          >
+            <motion.div variants={fadeInUp}>
+              <h3 className="font-semibold text-zinc-900 mb-3">Passports</h3>
+              <ul className="space-y-1 text-sm text-zinc-600">
+                <li>• obtener un pasaporte</li>
+                <li>• sacar cita para pasaporte</li>
+                <li>• cómo sacar el pasaporte</li>
+                <li>• requisitos para sacar pasaporte</li>
+                <li>• UK passport application</li>
+                <li>• British passport renewal</li>
+                <li>• Passport UK</li>
+                <li>• Apply for UK passport</li>
+              </ul>
+            </motion.div>
+            <motion.div variants={fadeInUp}>
+              <h3 className="font-semibold text-zinc-900 mb-3">
+                Driver&apos;s Licenses
+              </h3>
+              <ul className="space-y-1 text-sm text-zinc-600">
+                <li>• UK driving licence</li>
+                <li>• DVLA driving licence</li>
+                <li>• driving theory test</li>
+                <li>• drivers license renewal</li>
+                <li>• deutscher führerschein</li>
+                <li>• permiso de conducir b</li>
+                <li>• renovar permiso de conducir</li>
+                <li>• permiso internacional de conducir</li>
+              </ul>
+            </motion.div>
+            <motion.div variants={fadeInUp}>
+              <h3 className="font-semibold text-zinc-900 mb-3">
+                Residence Permits
+              </h3>
+              <ul className="space-y-1 text-sm text-zinc-600">
+                <li>• UK residence permit</li>
+                <li>• EU residence permit</li>
+                <li>• Arbeitserlaubnis Deutschland</li>
+                <li>• Niederlassungserlaubnis</li>
+                <li>• Permesso di soggiorno</li>
+                <li>• Spain residence permit</li>
+                <li>• Germany residence permit</li>
+                <li>• France residence permit</li>
+              </ul>
+            </motion.div>
+            <motion.div variants={fadeInUp}>
+              <h3 className="font-semibold text-zinc-900 mb-3">ID Cards</h3>
+              <ul className="space-y-1 text-sm text-zinc-600">
+                <li>• ID card</li>
+                <li>• identity card</li>
+                <li>• id card UK</li>
+                <li>• identity document</li>
+                <li>• card application</li>
+                <li>• national ID card</li>
+                <li>• state ID card</li>
+                <li>• identity verification</li>
+              </ul>
+            </motion.div>
+          </motion.div>
+        </motion.section>
       </div>
     </main>
   );
